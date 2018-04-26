@@ -1,3 +1,10 @@
+/*
+ * compile: mpic++ merge-parallel-simple.c
+ * run: mpirun -n p ./a.out num
+ * merge-parallel-simple.c: simple parallel implementation of merge sort
+ * note: p and num should be power of 2.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

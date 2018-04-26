@@ -1,8 +1,7 @@
 /*
- * bitonic.c: Parallel implementation of Bitonic Sort where each process applies bitonic sort
- * Satyam Mittal
- * Raghav Gupta
- * Argument required: size of input set
+ * compile: mpic++ bitonic-parallel-simple.c
+ * run: mpirun -n p ./a.out num
+ * bitonic-parallel-simple.c: Parallel implementation of Bitonic Sort where each process applies bitonic sort
  */
 #include <stdio.h>
 #include <stdlib.h>

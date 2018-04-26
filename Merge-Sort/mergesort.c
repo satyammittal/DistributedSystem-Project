@@ -1,15 +1,20 @@
-/* merge sort */
+/*
+ * compile: mpic++ mergesort.cpp
+ * run: mpirun -n p ./a.out num
+ * mergesort.cpp: main parallel implementation of merge sort
+ * note: p and num should be power of 2.
+ */
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <mpi.h>
 #include <time.h>
-
-#define N 1000000
 
 void showElapsed(int id, char *m);
 void showVector(int *v, int n, int id);
 int * merge(int *A, int asize, int *B, int bsize);
 void swap(int *v, int i, int j);
-void m_sort(int *A, int min, int max);
+void merge_sort(int *A, int min, int max);
 
 double startT,stopT;
 
@@ -38,8 +43,6 @@ int * merge(int *A, int asize, int *B, int bsize) {
 	bi = 0;
 	ci = 0;
 
-	/* printf("asize=%d bsize=%d\n", asize, bsize); */
-
 	C = (int *)malloc(csize*sizeof(int));
 	while ((ai < asize) && (bi < bsize)) {
 		if (A[ai] <= B[bi]) {
@@ -63,7 +66,6 @@ int * merge(int *A, int asize, int *B, int bsize) {
 	for (i = 0; i < bsize; i++)
 		B[i] = C[asize+i];
 
-	/* showVector(C, csize, 0); */
 	return C;
 }
 
@@ -75,9 +77,9 @@ void swap(int *v, int i, int j)
 	v[j] = t;
 }
 
-void m_sort(int *A, int min, int max)
+void merge_sort(int *A, int min, int max)
 {
-	int *C;		/* dummy, just to fit the function */
+	int *C;
 	int mid = (min+max)/2;
 	int lowerCount = mid - min + 1;
 	int upperCount = max - mid;
@@ -87,20 +89,21 @@ void m_sort(int *A, int min, int max)
 		return;
 	} else {
 		/* Otherwise, sort the first half */
-		m_sort(A, min, mid);
+		merge_sort(A, min, mid);
 		/* Now sort the second half */
-		m_sort(A, mid+1, max);
+		merge_sort(A, mid+1, max);
 		/* Now merge the two halves */
 		C = merge(A + min, lowerCount, A + mid + 1, upperCount);
 	}
 }
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	int * data;
 	int * chunk;
 	int * other;
-	int m,n=N;
+	int m;
+	int n = atoi(argv[1]);
 	int id,p;
 	int s = 0;
 	int i;
@@ -132,14 +135,14 @@ main(int argc, char **argv)
 		MPI_Bcast(&s,1,MPI_INT,0,MPI_COMM_WORLD);
 		chunk = (int *)malloc(s*sizeof(int));
 		MPI_Scatter(data,s,MPI_INT,chunk,s,MPI_INT,0,MPI_COMM_WORLD);
-		m_sort(chunk, 0, s-1);
+		merge_sort(chunk, 0, s-1);
 	}
 	else
 	{
 		MPI_Bcast(&s,1,MPI_INT,0,MPI_COMM_WORLD);
 		chunk = (int *)malloc(s*sizeof(int));
 		MPI_Scatter(data,s,MPI_INT,chunk,s,MPI_INT,0,MPI_COMM_WORLD);
-		m_sort(chunk, 0, s-1);
+		merge_sort(chunk, 0, s-1);
 	}
 
 	step = 1;
@@ -173,7 +176,7 @@ main(int argc, char **argv)
 
 		printf("%d; %d processors; %f secs\n",s,p,(stopT-startT)/CLOCKS_PER_SEC);
 
-		fout = fopen("result","w");
+		fout = fopen("output","w");
 		for(i=0;i<s;i++)
 			fprintf(fout,"%d\n",chunk[i]);
 		fclose(fout);
